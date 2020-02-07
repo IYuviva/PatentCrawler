@@ -57,7 +57,8 @@ printTime()
 # 保存首页
 writer = pd.ExcelWriter('patentInfoTmp.xlsx')  # 一个Excel中
 aPatent.parse(driver.page_source, writer)
-print(1, 1)
+tmp = aPatent.getCurPage(driver.page_source)
+print(tmp, tmp)
 
 # 确认总页数
 page_num = aPatent.getPageNum(driver.page_source)
@@ -66,7 +67,6 @@ if page_rq > page_num or page_rq == 0:
 
 #print(page_num)
 
-# 自动保存5页
 new_page = 0
 old_page = 0
 # 翻页
