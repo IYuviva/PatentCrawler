@@ -16,8 +16,9 @@ page_turn_delay = 2  # 自动翻页延时，单位:s
 
 # 打印当前时间
 def printTime():
-    print(strftime("%Y-%m-%d %H:%M:%S", localtime()))
-    return
+    start_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
+    print(start_time)
+    return start_time
 
 # get访问登录界面
 driver = webdriver.Firefox()
@@ -53,7 +54,8 @@ time.sleep(2)
 driver.find_element_by_link_text('列表式').click()
 time.sleep(2)
 
-printTime()
+run_start_time = printTime()
+
 # 保存首页
 writer = pd.ExcelWriter('patentInfoTmp.xlsx')  # 一个Excel中
 aPatent.parse(driver.page_source, writer)
@@ -69,28 +71,35 @@ if page_rq > page_num or page_rq == 0:
 
 new_page = 0
 old_page = 0
+page_turn_try_cnt = 0  # 翻页尝试次数
 # 翻页
 page_in = aPatent.getCurPage(driver.page_source)
 driver.find_element_by_link_text('下一页').click()
 while new_page < page_rq:
     time.sleep(page_turn_delay)
     new_page = aPatent.getCurPage(driver.page_source)
+
     if (new_page - old_page) >= 1 or (new_page - page_in) == 1:
         old_page = new_page
-        aPatent.parse(driver.page_source, writer, (13 * (new_page - 1)))  # 保存数据
         try:
+            aPatent.parse(driver.page_source, writer, (13 * (new_page - 1)))  # 保存数据
             driver.find_element_by_link_text('下一页').click()
+            page_turn_try_cnt = 0
         except:
             old_page -= 1  # 返回，继续翻页
             time.sleep(page_turn_delay)
-        # 翻页
+
     else:
-        pass
+        page_turn_try_cnt += 1
+        print('no change, ' + str(page_turn_try_cnt))
+        if page_turn_try_cnt == 10:
+            break
 
     print(new_page, old_page)
 
 # 保存到硬盘
 writer.save()
+print(run_start_time)
 printTime()
 
 # excel格式处理
