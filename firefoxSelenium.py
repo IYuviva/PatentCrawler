@@ -12,7 +12,7 @@ user_name = 'thisisdaming'
 user_password = '19911231a'
 url_login = 'http://pss-system.cnipa.gov.cn/sipopublicsearch/portal/uilogin-forwardLogin.shtml'
 page_rq = 0  # 需要前几页, 如果=0, 那么为最大页数
-page_turn_delay = 2  # 自动翻页延时，单位:s
+page_turn_delay = 3  # 自动翻页延时，单位:s
 
 # 打印当前时间
 def printTime():
@@ -24,7 +24,11 @@ def printTime():
 driver = webdriver.Firefox()
 driver.get(url_login)
 
+# 设置超时时间
+driver.set_page_load_timeout(20)
+
 # 延时，确保登录网页出现
+input('登录界面加载完成后按任意键继续...')
 time.sleep(1)
 
 # 找到用户名和密码输入框
@@ -59,8 +63,8 @@ run_start_time = printTime()
 # 保存首页
 writer = pd.ExcelWriter('patentInfoTmp.xlsx')  # 一个Excel中
 aPatent.parse(driver.page_source, writer)
-tmp = aPatent.getCurPage(driver.page_source)
-print(tmp, tmp)
+start_page = aPatent.getCurPage(driver.page_source)
+print(start_page, start_page)
 
 # 确认总页数
 page_num = aPatent.getPageNum(driver.page_source)
@@ -72,12 +76,19 @@ if page_rq > page_num or page_rq == 0:
 new_page = 0
 old_page = 0
 page_turn_try_cnt = 0  # 翻页尝试次数
+page_get_cnt = 0  # 查找异常计数
 # 翻页
 page_in = aPatent.getCurPage(driver.page_source)
 driver.find_element_by_link_text('下一页').click()
 while new_page < page_rq:
     time.sleep(page_turn_delay)
-    new_page = aPatent.getCurPage(driver.page_source)
+    try:
+        new_page = aPatent.getCurPage(driver.page_source)
+        page_get_cnt = 0
+    except:
+        page_get_cnt += 1
+        if page_get_cnt == 10:
+            break
 
     if (new_page - old_page) >= 1 or (new_page - page_in) == 1:
         old_page = new_page
@@ -92,7 +103,8 @@ while new_page < page_rq:
     else:
         page_turn_try_cnt += 1
         print('no change, ' + str(page_turn_try_cnt))
-        if page_turn_try_cnt == 10:
+        time.sleep(page_turn_try_cnt)
+        if page_turn_try_cnt == 5:
             break
 
     print(new_page, old_page)
@@ -104,7 +116,7 @@ printTime()
 
 # excel格式处理
 excel = ExcelDeal()
-excel.deal('patentInfoTmp.xlsx', 'patentInfoNew.xlsx')
+excel.deal('patentInfoTmp.xlsx', 'patentInfo-' + str(start_page) + '-' + str(new_page) + '.xlsx')
 
 print('Finish.')
 # 关闭浏览器
