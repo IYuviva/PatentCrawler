@@ -8,8 +8,8 @@ from parseHtml import PatentParse
 from excelDeal import ExcelDeal
 
 # 配置区
-user_name = 'thisisdaming'
-user_password = '19911231a'
+user_name = 'xxx'
+user_password = 'xxx'
 url_login = 'http://pss-system.cnipa.gov.cn/sipopublicsearch/portal/uilogin-forwardLogin.shtml'
 page_rq = 0  # 需要前几页, 如果=0, 那么为最大页数
 page_turn_delay = 3  # 自动翻页延时，单位:s
